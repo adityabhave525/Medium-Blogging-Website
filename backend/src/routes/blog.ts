@@ -3,6 +3,8 @@ import { withAccelerate } from "@prisma/extension-accelerate";
 import { Hono } from "hono";
 import { verify } from "hono/jwt";
 
+import { createPostSchema, updatePostSchema } from "@adityatheprogrammer/common";
+
 export const blogRouter = new Hono<{
   Bindings: {
     DATABASE_URL: string;
@@ -60,6 +62,11 @@ blogRouter.post("/postBlog", async (c) => {
   }).$extends(withAccelerate());
 
   const body = await c.req.json();
+  const {success} = createPostSchema.safeParse(body);
+  if(!success){
+    c.status(400)
+    return c.json({error: "Invalid Post Type"})
+  }
   const post = await prisma.post.create({
     data: {
       title: body.title,
@@ -80,6 +87,11 @@ blogRouter.put("/putBlog", async (c) => {
   }).$extends(withAccelerate());
 
   const body = await c.req.json();
+  const {success} = updatePostSchema.safeParse(body);
+  if(!success){
+    c.status(400)
+    return c.json({error: "Invalid Blog Input for updating"})
+  }
   const updatePost = await prisma.post.update({
     where: {
       id: body.id,

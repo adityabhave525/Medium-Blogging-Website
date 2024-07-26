@@ -5,6 +5,8 @@ import { Hono } from "hono";
 import { jwt, sign, verify } from 'hono/jwt'
 import * as bcrypt from 'bcryptjs'
 
+import { signupSchema, signinSchema } from "@adityatheprogrammer/common";
+
 const saltRound = 10
 
 
@@ -22,6 +24,11 @@ userRouter.post('/signup', async(c) =>{
     }).$extends(withAccelerate())
 
       const body = await c.req.json();
+      const {success} = signupSchema.safeParse(body);
+      if(!success){
+        c.status(400)
+        return c.json({error: "Invalid inputs"})
+      }
       const hash = await bcrypt.hash(body.password, saltRound)
       try{
         const user = await prisma.user.create({
@@ -46,6 +53,11 @@ userRouter.post('/signup', async(c) =>{
     }).$extends(withAccelerate())
   
     const body = await c.req.json();
+    const {success} = signinSchema.safeParse(body);
+      if(!success){
+        c.status(400)
+        return c.json({error: "Invalid inputs"})
+      }
     
     const user = await prisma.user.findUnique({
       where:{
